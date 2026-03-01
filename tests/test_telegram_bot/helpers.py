@@ -1,5 +1,6 @@
 """Test helpers for telegram_bot tests."""
 
+from src.message_bus.events.item_found_event import ItemFoundEvent
 from src.vinted_network_client.models.vinted_item import VintedItem
 from src.vinted_network_client.models.vinted_price import VintedPrice
 
@@ -29,3 +30,8 @@ def make_vinted_item(**kwargs) -> VintedItem:
     for key, value in defaults.items():
         setattr(item, key, value)
     return item
+
+
+def make_event(**item_kwargs) -> ItemFoundEvent:
+    item = make_vinted_item(**item_kwargs)
+    return ItemFoundEvent(chat_id=12345, item=item)

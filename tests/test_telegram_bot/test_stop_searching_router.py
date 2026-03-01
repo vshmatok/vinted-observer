@@ -15,51 +15,49 @@ EXPECTED_ANSWER = (
 )
 
 
-# --- cmd_stop_searching ---
+class TestCmdStopSearching:
+    async def test_publishes_event_and_sends_confirmation(
+        self, mock_message, mock_message_bus
+    ):
+        await cmd_stop_searching(mock_message, mock_message_bus)
 
+        mock_message_bus.publish.assert_called_once_with(StopSearchingEvent())
+        mock_message.answer.assert_called_once_with(EXPECTED_ANSWER)
 
-async def test_publishes_event_and_sends_confirmation(mock_message, mock_message_bus):
-    await cmd_stop_searching(mock_message, mock_message_bus)
+    async def test_publish_error_still_sends_message(
+        self, mock_message, mock_message_bus
+    ):
+        mock_message_bus.publish.side_effect = Exception("bus error")
 
-    mock_message_bus.publish.assert_called_once_with(StopSearchingEvent())
-    mock_message.answer.assert_called_once_with(EXPECTED_ANSWER)
+        await cmd_stop_searching(mock_message, mock_message_bus)
 
+        mock_message.answer.assert_called_once_with(EXPECTED_ANSWER)
 
-async def test_publish_error_still_sends_message(mock_message, mock_message_bus):
-    mock_message_bus.publish.side_effect = Exception("bus error")
+    async def test_answer_error_caught(self, mock_message, mock_message_bus):
+        mock_message.answer.side_effect = TelegramAPIError(
+            method=MagicMock(), message="send error"
+        )
 
-    await cmd_stop_searching(mock_message, mock_message_bus)
+        await cmd_stop_searching(mock_message, mock_message_bus)
 
-    mock_message.answer.assert_called_once_with(EXPECTED_ANSWER)
+        mock_message_bus.publish.assert_called_once_with(StopSearchingEvent())
 
+    async def test_both_fail_caught(self, mock_message, mock_message_bus):
+        mock_message_bus.publish.side_effect = Exception("bus error")
+        mock_message.answer.side_effect = TelegramAPIError(
+            method=MagicMock(), message="send error"
+        )
 
-async def test_answer_error_caught(mock_message, mock_message_bus):
-    mock_message.answer.side_effect = TelegramAPIError(
-        method=MagicMock(), message="send error"
-    )
+        await cmd_stop_searching(mock_message, mock_message_bus)
 
-    await cmd_stop_searching(mock_message, mock_message_bus)
+        mock_message_bus.publish.assert_called_once_with(StopSearchingEvent())
+        mock_message.answer.assert_called_once_with(EXPECTED_ANSWER)
 
-    mock_message_bus.publish.assert_called_once_with(StopSearchingEvent())
+    async def test_publish_called_before_answer(self, mock_message, mock_message_bus):
+        call_order = []
+        mock_message_bus.publish.side_effect = lambda *_: call_order.append("publish")
+        mock_message.answer.side_effect = lambda *_: call_order.append("answer")
 
+        await cmd_stop_searching(mock_message, mock_message_bus)
 
-async def test_both_fail_caught(mock_message, mock_message_bus):
-    mock_message_bus.publish.side_effect = Exception("bus error")
-    mock_message.answer.side_effect = TelegramAPIError(
-        method=MagicMock(), message="send error"
-    )
-
-    await cmd_stop_searching(mock_message, mock_message_bus)
-
-    mock_message_bus.publish.assert_called_once_with(StopSearchingEvent())
-    mock_message.answer.assert_called_once_with(EXPECTED_ANSWER)
-
-
-async def test_publish_called_before_answer(mock_message, mock_message_bus):
-    call_order = []
-    mock_message_bus.publish.side_effect = lambda *_: call_order.append("publish")
-    mock_message.answer.side_effect = lambda *_: call_order.append("answer")
-
-    await cmd_stop_searching(mock_message, mock_message_bus)
-
-    assert call_order == ["publish", "answer"]
+        assert call_order == ["publish", "answer"]

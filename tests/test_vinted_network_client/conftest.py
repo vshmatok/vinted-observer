@@ -7,8 +7,6 @@ from src.vinted_network_client.utils.proxy_manager import ProxyManager
 from src.vinted_network_client.vinted_network_client import VintedNetworkClient
 
 
-# --- Proxy fixtures ---
-
 @pytest.fixture
 def sample_proxy_https():
     return VintedProxy(
@@ -41,8 +39,6 @@ def proxy_manager(sample_proxy_list):
     return ProxyManager(sample_proxy_list)
 
 
-# --- User agent fixtures ---
-
 @pytest.fixture
 def sample_user_agents():
     return [
@@ -51,8 +47,6 @@ def sample_user_agents():
         {"ua": "Mozilla/5.0 Firefox"},
     ]
 
-
-# --- Client fixtures ---
 
 @pytest.fixture
 def ready_client(sample_user_agents):
@@ -75,58 +69,20 @@ def ready_client_with_proxy(ready_client, proxy_manager, sample_proxy_https):
     return ready_client
 
 
-# --- Helpers ---
-
-def make_item_json(**overrides):
-    """Builds sample API item JSON dict with defaults."""
-    base = {
-        "id": 12345,
-        "title": "Nike Air Max",
-        "view_count": 42,
-        "path": "/items/12345-nike-air-max",
-        "url": "https://www.vinted.pl/items/12345-nike-air-max",
-        "status": "active",
-        "brand_title": "Nike",
-        "size_title": "M",
-        "user": {
-            "id": 99,
-            "login": "seller123",
-            "profile_url": "https://www.vinted.pl/member/99-seller123",
-        },
-        "photo": {
-            "id": 1,
-            "image_no": 1,
-            "is_main": True,
-            "is_suspicious": False,
-            "is_hidden": False,
-            "full_size_url": "https://images.vinted.net/full/12345.jpg",
-            "high_resolution": {
-                "id": "hr_1",
-                "timestamp": 1700000000,
-            },
-            "thumbnails": [
-                {"type": "thumb", "url": "https://images.vinted.net/thumb/12345.jpg"},
-            ],
-        },
-        "price": {"amount": "25.50", "currency_code": "PLN"},
-        "total_item_price": {"amount": "30.00", "currency_code": "PLN"},
-    }
-    base.update(overrides)
-    return base
+@pytest.fixture
+def proxy_a():
+    return VintedProxy(
+        ip="1.1.1.1", port="8080", username=None, password=None, is_https=True
+    )
 
 
-def make_search_response(items):
-    """Wraps items in {"items": [...]}."""
-    return {"items": items}
+@pytest.fixture
+def proxy_b():
+    return VintedProxy(
+        ip="2.2.2.2", port="8080", username=None, password=None, is_https=True
+    )
 
 
-def make_response_ctx(status=200, json_data=None, cookies=None):
-    """Builds mock async context manager for session.get()."""
-    response = AsyncMock()
-    response.status = status
-    response.json = AsyncMock(return_value=json_data or {})
-    response.cookies = cookies or {}
-    ctx = MagicMock()
-    ctx.__aenter__ = AsyncMock(return_value=response)
-    ctx.__aexit__ = AsyncMock(return_value=False)
-    return ctx
+@pytest.fixture
+def manager(proxy_a, proxy_b):
+    return ProxyManager([proxy_a, proxy_b])

@@ -7,12 +7,17 @@ from aiogram.types import Message, CallbackQuery, Chat
 from aiogram.fsm.context import FSMContext
 
 from src.message_bus.message_bus import MessageBus
+from src.telegram_bot.bot import TelegramBot
 from src.telegram_bot.models.search import Search
 from src.telegram_bot.utility.keyboard_builder import (
     get_buy_button_keyboard,
     get_edit_keyboard,
     get_main_menu,
 )
+from tests.test_telegram_bot.helpers import make_vinted_item
+
+# Valid format for aiogram token validation: "<digits>:<alphanumeric>"
+TEST_TOKEN = "123456789:ABCDefGHIJKLmnopQRSTuvwxyz"
 
 
 @pytest.fixture
@@ -125,7 +130,27 @@ def make_search():
         price_max: float = 100.0,
     ) -> Search:
         return Search(
-            id=id, chat_id=chat_id, query=query, price_min=price_min, price_max=price_max
+            id=id,
+            chat_id=chat_id,
+            query=query,
+            price_min=price_min,
+            price_max=price_max,
         )
 
     return _make
+
+
+@pytest.fixture(scope="module")
+def telegram_bot_instance():
+    """Single TelegramBot instance shared across all init tests."""
+    bus = AsyncMock()
+    return TelegramBot(message_bus=bus, token=TEST_TOKEN), bus
+
+
+@pytest.fixture
+def notification_bot(telegram_bot_instance):
+    bot, _ = telegram_bot_instance
+    original_bot = bot.bot
+    bot.bot = AsyncMock()
+    yield bot
+    bot.bot = original_bot
