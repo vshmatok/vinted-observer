@@ -1,0 +1,26 @@
+from enum import Enum
+
+
+class VintedDomain(Enum):
+    PL = "pl"
+    FR = "fr"
+    AT = "at"
+    BE = "be"
+    CZ = "cz"
+    DE = "de"
+    DK = "dk"
+    ES = "es"
+    FI = "fi"
+    GR = "gr"
+    HR = "hr"
+    HU = "hu"
+    IT = "it"
+    LT = "lt"
+    LU = "lu"
+    NL = "nl"
+    PT = "pt"
+    RO = "ro"
+    SE = "se"
+    SK = "sk"
+    CO_UK = "co.uk"
+    COM = "com"

@@ -1,0 +1,45 @@
+[project]
+name = "vinted-telegram-bot"
+version = "0.1.0"
+description = "Telegram bot for monitoring Vinted marketplace"
+requires-python = ">=3.13"
+dependencies = [
+    "aiohttp",
+    "aiofiles",
+    "aiogram",
+    "aiosqlite",
+    "python-dotenv",
+    "yoyo-migrations",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "aioresponses",
+    "pytest-mock",
+]
+
+[tool.yoyo]
+batch_mode = "on"
+migration_table = "_yoyo_migration"
+sources = "./src/migrations"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/migrations/*",
+    # Config is excluded because it validates at import time via fail-fast checks
+    # (type conversions, range checks, enum lookups). These raise immediately on
+    # invalid env vars, making them untestable without monkeypatching the module
+    # import itself. The async methods (load_proxies, load_user_agents) and
+    # load_error_log_levels contain runtime validation that is covered indirectly
+    # through integration with their callers.
+    "src/config.py",
+]
